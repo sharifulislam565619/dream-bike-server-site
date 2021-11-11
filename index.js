@@ -22,6 +22,7 @@ async function run() {
       const productCollection = database.collection("products");
       const orderCollection = database.collection("orders");
       const userCollection = database.collection("users")
+      const reviewCollection = database.collection("review")
 
       // insert one product
       app.post("/addProduct", async (req, res) => {
@@ -31,6 +32,22 @@ async function run() {
             description: data.description,
             price: data.price,
             img: data.img
+         }
+         const result = await productCollection.insertOne(doc);
+         res.json(result)
+         console.log(result)
+      })
+
+      // insert a user review
+      app.post("/review", async (req, res) => {
+         const data = req.body;
+         console.log(data)
+         const doc = {
+            email: data.email,
+            name: data.name,
+            description: data.description,
+            photoUrl: data.photoURL,
+            rating: data.rating
          }
          const result = await productCollection.insertOne(doc);
          res.json(result)
@@ -49,6 +66,18 @@ async function run() {
          const cursor = await orderCollection.find({}).toArray();
          res.send(cursor)
 
+      })
+
+      //get user
+      app.get("/users/:email", async (req, res) => {
+         const email = req.params.email
+         const filter = { email: email }
+         const result = await userCollection.findOne(filter)
+         let isAdmin = false
+         if (result.role === "admin") {
+            isAdmin = true
+         }
+         res.json({ admin: isAdmin })
       })
 
       // user collection
@@ -93,7 +122,6 @@ async function run() {
          };
          const result = await userCollection.updateOne(filter, updateDoc);
          res.json(result)
-         console.log(result)
       })
 
 
@@ -107,12 +135,20 @@ async function run() {
 
 
       // delete orders
-      app.delete("/delete/:id", async (req, res) => {
+      app.delete("/deleteOrder/:id", async (req, res) => {
          const id = req.params.id;
          const query = { _id: ObjectId(id) }
          const result = await orderCollection.deleteOne(query)
          res.json(result)
-         console.log(result);
+      })
+
+
+      // delete products
+      app.delete("/deleteProduct/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: ObjectId(id) }
+         const result = await productCollection.deleteOne(query)
+         res.json(result)
       })
 
       // get single product
@@ -122,8 +158,6 @@ async function run() {
          const result = await productCollection.findOne(query);
          res.json(result);
       })
-
-
 
       // Order product
       app.post("/order", async (req, res) => {

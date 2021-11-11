@@ -21,6 +21,7 @@ async function run() {
       const database = client.db("dream-bike");
       const productCollection = database.collection("products");
       const orderCollection = database.collection("orders");
+      const userCollection = database.collection("users")
 
       // insert one product
       app.post("/addProduct", async (req, res) => {
@@ -42,47 +43,77 @@ async function run() {
          res.json(result);
       })
 
-      // // get all orders data
-      // app.get("/manageOrders", async (req, res) => {
+      // get all orders data
+      app.get("/manageOrders", async (req, res) => {
 
-      //    const cursor = await orders.find({}).toArray();
-      //    res.send(cursor)
+         const cursor = await orderCollection.find({}).toArray();
+         res.send(cursor)
 
-      // })
+      })
 
-      // // get MyOrders
-      // app.get("/myOrders/:email", async (req, res) => {
-      //    const result = await orders.find({
-      //       email: req.params.email,
-      //    }).toArray();
-      //    res.send(result);
-      // });
+      // user collection
+      app.post("/users", async (req, res) => {
+         const user = req.body;
+         const result = await userCollection.insertOne(user);
+         res.json(result)
+         console.log(result)
+      })
+      app.put("/users", async (req, res) => {
+         const user = req.body;
+         const filter = { email: user.email }
+         const option = { upsert: true }
+         const updateDoc = { $set: user };
+         const result = await userCollection.updateOne(filter, updateDoc, option);
+         res.json(result)
+         console.log(result)
+      })
 
-      // // update status
-      // app.put("/status/:id", async (req, res) => {
+      // update status
+      app.put("/status/:id", async (req, res) => {
+         const id = req.params.id
+         const filter = { _id: ObjectId(id) };
+         const options = { upsert: true };
+         const updateDoc = {
+            $set: {
+               status: req.body.status
+            },
+         };
+         const result = await orderCollection.updateOne(filter, updateDoc, options);
+         res.json(result)
+      })
 
-      //    const id = req.params.id
-      //    const filter = { _id: ObjectId(id) };
-      //    const options = { upsert: true };
-      //    const updateDoc = {
-      //       $set: {
-      //          status: req.body.status
-      //       },
-      //    };
-      //    const result = await orders.updateOne(filter, updateDoc, options);
-      //    res.json(result)
+      //make a new admin
+      app.put("/admin/:email", async (req, res) => {
+         const email = req.params.email
+         const filter = { email: email };
+         const updateDoc = {
+            $set: {
+               role: "admin"
+            },
+         };
+         const result = await userCollection.updateOne(filter, updateDoc);
+         res.json(result)
+         console.log(result)
+      })
 
 
-      // })
+      // get MyOrders
+      app.get("/myOrders/:email", async (req, res) => {
+         const result = await orderCollection.find({
+            email: req.params.email,
+         }).toArray();
+         res.send(result);
+      });
 
-      // // delete orders
-      // app.delete("/delete/:id", async (req, res) => {
-      //    const id = req.params.id;
-      //    const query = { _id: ObjectId(id) }
-      //    const result = await orders.deleteOne(query)
-      //    res.json(result)
-      //    console.log(result);
-      // })
+
+      // delete orders
+      app.delete("/delete/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: ObjectId(id) }
+         const result = await orderCollection.deleteOne(query)
+         res.json(result)
+         console.log(result);
+      })
 
       // get single product
       app.get('/product/:id', async (req, res) => {
@@ -111,7 +142,6 @@ async function run() {
          }
          const result = await orderCollection.insertOne(doc);
          res.json(result)
-         console.log(result);
       })
 
 

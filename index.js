@@ -45,13 +45,20 @@ async function run() {
          const doc = {
             email: data.email,
             name: data.name,
-            description: data.description,
-            photoUrl: data.photoURL,
+            comment: data.comment,
+            photoURL: data.photoURL,
             rating: data.rating
          }
-         const result = await productCollection.insertOne(doc);
+         const result = await reviewCollection.insertOne(doc);
          res.json(result)
          console.log(result)
+      })
+
+      // get all reviews
+      app.get("/reviews", async (req, res) => {
+         const result = await reviewCollection.find({}).toArray()
+         res.json(result)
+
       })
 
       // get all products 
@@ -76,6 +83,8 @@ async function run() {
          let isAdmin = false
          if (result.role === "admin") {
             isAdmin = true
+         } else {
+            res.status(401).json()
          }
          res.json({ admin: isAdmin })
       })
@@ -85,7 +94,6 @@ async function run() {
          const user = req.body;
          const result = await userCollection.insertOne(user);
          res.json(result)
-         console.log(result)
       })
       app.put("/users", async (req, res) => {
          const user = req.body;
@@ -94,7 +102,6 @@ async function run() {
          const updateDoc = { $set: user };
          const result = await userCollection.updateOne(filter, updateDoc, option);
          res.json(result)
-         console.log(result)
       })
 
       // update status
